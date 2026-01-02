@@ -15,6 +15,7 @@ module tb_top;
   //---------------------------------------
   ahb_assertions u_assert (.vif(vif));
   ahb_stimulus   u_stim   (.vif(vif));
+	ahb_coverage   u_cov    (.vif(vif));
 
   //---------------------------------------
   // Reset + stimulus control
@@ -90,14 +91,27 @@ module tb_top;
     // 12. Illegal BUSY + stall too long
     u_stim.illegal_busy_stall();
 
-    //-----------------------------------
-    // End of test
-    //-----------------------------------
-    #50;
-    $display("[TB] Simulation end");
+//
+    // Bổ sung để đạt 100% coverage
+    u_stim.legal_okay_resp();
 
-    // Không dùng $finish để giữ coverage
-    //$stop;
+    u_stim.legal_incr4_burst();
+    u_stim.legal_wrap8_burst();
+    // thêm incr8, wrap16, incr16
+
+    u_stim.busy_read();
+    u_stim.busy_write();
+    u_stim.idle_read();
+    u_stim.idle_write();
+
+    u_stim.illegal_error_when_notready();
+
+    u_stim.locked_busy();
+    u_stim.locked_idle();
+
+    u_stim.grant_off_req_on();
+    u_stim.grant_off_req_off();
+
   end
 
 endmodule

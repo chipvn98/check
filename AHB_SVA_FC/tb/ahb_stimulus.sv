@@ -219,5 +219,49 @@ module ahb_stimulus (ahb_if vif);
       vif.HREADY <= 0;
     end
   endtask
+//
+  // HRESP = OKAY
+  task legal_okay_resp();
+    @(posedge vif.HCLK);
+    vif.HREADY <= 1;
+    vif.HRESP  <= 2'b00; // OKAY
+  endtask
+
+  // Các burst còn thiếu
+  task legal_incr4_burst();
+    vif.HBURST <= 3'b011; // INCR4
+    nonseq(0, 32'h1000);
+    repeat (3) @(posedge vif.HCLK) seq(vif.HADDR + 4);
+  endtask
+
+  task legal_wrap8_burst();
+    vif.HBURST <= 3'b100; // WRAP8
+    nonseq(0, 32'h2000);
+    repeat (7) @(posedge vif.HCLK) seq(vif.HADDR + 4);
+  endtask
+
+  // Tương tự cho incr8, wrap16, incr16
+
+  // BUSY/IDLE × HWRITE
+  task busy_read();  @(posedge vif.HCLK); vif.HTRANS <= 2'b01; vif.HWRITE <= 0; endtask
+  task busy_write(); @(posedge vif.HCLK); vif.HTRANS <= 2'b01; vif.HWRITE <= 1; endtask
+  task idle_read();  @(posedge vif.HCLK); vif.HTRANS <= 2'b00; vif.HWRITE <= 0; endtask
+  task idle_write(); @(posedge vif.HCLK); vif.HTRANS <= 2'b00; vif.HWRITE <= 1; endtask
+
+  // HREADY × HRESP
+  task illegal_error_when_notready();
+    @(posedge vif.HCLK);
+    vif.HREADY <= 0;
+    vif.HRESP  <= 2'b01; // ERROR khi stall
+  endtask
+
+  // HLOCK × HTRANS
+  task locked_busy(); @(posedge vif.HCLK); vif.HLOCK <= 1; vif.HTRANS <= 2'b01; endtask
+  task locked_idle(); @(posedge vif.HCLK); vif.HLOCK <= 1; vif.HTRANS <= 2'b00; endtask
+
+  // HGRANT × HBUSREQ (grant_off cases)
+  task grant_off_req_on();  @(posedge vif.HCLK); vif.HGRANT <= 0; vif.HBUSREQ <= 1; endtask
+  task grant_off_req_off(); @(posedge vif.HCLK); vif.HGRANT <= 0; vif.HBUSREQ <= 0; endtask
+
 
 endmodule
